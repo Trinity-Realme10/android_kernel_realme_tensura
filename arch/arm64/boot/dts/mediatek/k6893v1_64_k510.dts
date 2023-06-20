@@ -9,8 +9,6 @@
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/pinctrl/mt6885-pinfunc.h>
 #include <dt-bindings/clock/mt6893-clk.h>
-#include <dt-bindings/lcm/td4330_fhdp_dphy_vdo_truly.dtsi>
-#include <dt-bindings/lcm/ft8756_fhdp_dphy_vdo_truly.dtsi>
 
 &gpio_usage_mapping {
 	GPIO_SIM1_HOT_PLUG = <&pio 43 0>;
@@ -24,6 +22,15 @@
 	GPIO_FDD_BAND_SUPPORT_DETECT_2ND_PIN = <&pio 64 0>;
 	GPIO_FDD_BAND_SUPPORT_DETECT_3RD_PIN = <&pio 65 0>;
 	GPIO_FDD_BAND_SUPPORT_DETECT_4TH_PIN = <&pio 66 0>;
+};
+
+&mtk_leds {
+	compatible = "mediatek,pwm-leds";
+
+	backlight {
+		pwms = <&disp_pwm 0 39385>;
+		pwm-names = "lcd-backlight";
+	};
 };
 
 &gpio{
@@ -218,8 +225,8 @@
 		<201 1 0 0 1 1 1>,
 		<202 1 0 0 1 1 1>,
 		<203 1 0 0 1 1 1>,
-		<204 1 0 0 1 1 1>,
-		<205 1 0 0 1 1 1>,
+		<204 6 0 0 1 0 1>,
+		<205 6 0 0 1 0 1>,
 		<206 1 0 0 0 0 1>,
 		<207 1 0 0 0 0 1>,
 		<208 1 0 0 0 0 0>,
@@ -243,10 +250,10 @@
 		<226 0 0 0 1 0 0>,
 		<227 0 0 0 1 0 0>;
 };
+
 /*#include "mediatek/cust_mt6893_touch_1080x2300.dtsi"*/
 
 &chosen {
-	bootargs_ext = "androidboot.hardware=mt6893";
 	atag,videolfb-fb_base_l = <0x7e605000>;
 	atag,videolfb-fb_base_h = <0x0>;
 	atag,videolfb-islcmfound = <1>;
@@ -254,15 +261,63 @@
 	atag,videolfb-fps= <6000>;
 	atag,videolfb-vramSize= <0x1be0000>;
 	atag,videolfb-lcmname=
-		"ft8756_fhdp_dphy_vdo_truly";
+		"td4330_fhdp_dsi_vdo_auo_rt5081_drv";
 };
 
-&mtk_leds {
-	compatible = "mediatek,pwm-leds";
-
-	backlight {
-		pwms = <&disp_pwm 0 39385>;
-		pwm-names = "lcd-backlight";
+&odm {
+	led0:led@0 {
+		compatible = "mediatek,red";
+		led_mode = <0>;
+		data = <1>;
+		pwm_config = <0 0 0 0 0>;
+	};
+	led1:led@1 {
+		compatible = "mediatek,green";
+		led_mode = <0>;
+		data = <1>;
+		pwm_config = <0 0 0 0 0>;
+	};
+	led2:led@2 {
+		compatible = "mediatek,blue";
+		led_mode = <0>;
+		data = <1>;
+		pwm_config = <0 0 0 0 0>;
+	};
+	led3:led@3 {
+		compatible = "mediatek,jogball-backlight";
+		led_mode = <0>;
+		data = <1>;
+		pwm_config = <0 0 0 0 0>;
+	};
+	led4:led@4 {
+		compatible = "mediatek,keyboard-backlight";
+		led_mode = <0>;
+		data = <1>;
+		pwm_config = <0 0 0 0 0>;
+	};
+	led5:led@5 {
+		compatible = "mediatek,button-backlight";
+		led_mode = <0>;
+		data = <1>;
+		pwm_config = <0 0 0 0 0>;
+	};
+	led6:led@6 {
+		compatible = "mediatek,lcd-backlight";
+		//led_mode = <5>;
+		//#else
+		led_mode = <4>;
+		//#endif
+		data = <1>;
+		pwm_config = <0 1 0 0 0>;
+	};
+	vibrator0:vibrator@0 {
+		compatible = "mediatek,vibrator";
+		vib_timer = <25>;
+		vib_limit = <9>;
+		vib_vol= <9>;
+	};
+	usb_c_pinctrl:usb_c_pinctrl {
+		compatible = "mediatek,usb_c_pinctrl";
 	};
 };
 
@@ -344,16 +399,6 @@
 	pinctrl-1 = <&mtkfb_pins_lcm_rst_out0_gpio>;
 	pinctrl-2 = <&mtkfb_pins_lcm_dsi_te>;
 	status = "okay";
-};
-
-&gateic0 {
-	compatible = "mediatek,mtk-drm-gateic-drv-rt4801h";
-	pm-enable-gpios = <&pio 41 0>;
-	reset-gpios = <&pio 42 0>;
-	bias-gpios = <&pio 28 0>,
-		<&pio 29 0>;
-	pinctrl-names = "default";
-	panel-list = "default";
 };
 
 &dsi0 {
@@ -570,38 +615,11 @@
 	pinctrl-3 = <&sw_disable>;
 	status = "okay";
 };
-
-&mt6360_typec {
-	port {
-		tcpc_typec_usb: endpoint@0 {
-			remote-endpoint = <&ssusb_mux>;
-		};
-	};
-};
-
-&typec_mux_switch {
-	orientation-switch;
-	mode-switch;
-	accessory;
-	port {
-		ssusb_mux: endpoint@0 {
-			remote-endpoint = <&tcpc_typec_usb>;
-		};
-	};
-};
-
-&wifi {
-	flavor_bin = "d";
-};
-
-&bt {
-	flavor_bin = "d";
-};
 /* CONSYS end */
 
 &spi4 {
 	status = "disabled";
-};
+}
 
 &i2c0 {
 	status = "okay";
@@ -720,15 +738,4 @@
 			bias-pull-up;
 		};
 	};
-};
-
-&scp {
-		secure_dump = "disable";	/* secure dump via ATF */
-		secure_dump_size = <0x380000>; /* 3.5MB */
-};
-
-&reserved_memory {
-		reserve-memory-scp_share {
-			size = <0 0>; /* disable this, since having allocated in LK */
-		};
 };
