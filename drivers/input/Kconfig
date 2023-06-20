@@ -209,6 +209,8 @@ source "drivers/input/serio/Kconfig"
 
 source "drivers/input/gameport/Kconfig"
 
+source "drivers/input/fp_drivers/Kconfig"
+
 endmenu
 
 endmenu
