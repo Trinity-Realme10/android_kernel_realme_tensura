@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2021 MediaTek Inc.
+ * Copyright (c) 2022 MediaTek Inc.
  * Author: Owen Chen <owen.chen@mediatek.com>
  */
 
@@ -11,7 +11,7 @@
 #include <linux/platform_device.h>
 #include <linux/seq_file.h>
 
-#include <dt-bindings/power/mt6833-power.h>
+#include <dt-bindings/power/mt6789-power.h>
 
 #if IS_ENABLED(CONFIG_MTK_DEVAPC)
 #include <devapc_public.h>
@@ -22,7 +22,7 @@
 #endif
 
 #include "clkchk.h"
-#include "clkchk-mt6833.h"
+#include "clkchk-mt6789.h"
 
 #define BUG_ON_CHK_ENABLE		0
 #define CHECK_VCORE_FREQ		0
@@ -41,26 +41,23 @@ static struct regbase rb[] = {
 	[peri] = REGBASE_V(0x10003000, peri, PD_NULL, CLK_NULL),
 	[spm] = REGBASE_V(0x10006000, spm, PD_NULL, CLK_NULL),
 	[apmixed] = REGBASE_V(0x1000C000, apmixed, PD_NULL, CLK_NULL),
-	[ifr] = REGBASE_V(0x1020e000, ifr, PD_NULL, CLK_NULL),
-	[impc] = REGBASE_V(0x11007000, impc, PD_NULL, "i2c_sel"),
-	[afe] = REGBASE_V(0x11210000, afe, MT6833_POWER_DOMAIN_AUDIO, CLK_NULL),
-	[msdc0] = REGBASE_V(0x11230000, msdc0, PD_NULL, CLK_NULL),
-	[impe] = REGBASE_V(0x11CB1000, impe, PD_NULL, "i2c_sel"),
-	[imps] = REGBASE_V(0x11D02000, imps, PD_NULL, "i2c_sel"),
-	[impws] = REGBASE_V(0x11D23000, impws, PD_NULL, "i2c_sel"),
-	[impw] = REGBASE_V(0x11E03000, impw, PD_NULL, "i2c_sel"),
+	[dvfsrc_top] = REGBASE_V(0x10012000, dvfsrc_top, PD_NULL, CLK_NULL),
+	[impc] = REGBASE_V(0x1101B000, impc, PD_NULL, "i2c_sel"),
+	[afe] = REGBASE_V(0x11210000, afe, MT6789_POWER_DOMAIN_AUDIO, CLK_NULL),
+	[impw] = REGBASE_V(0x11E02000, impw, PD_NULL, "i2c_sel"),
+	[impen] = REGBASE_V(0x11EB4000, impen, PD_NULL, "i2c_sel"),
 	[impn] = REGBASE_V(0x11F01000, impn, PD_NULL, "i2c_sel"),
-	[mfgcfg] = REGBASE_V(0x13fbf000, mfgcfg, MT6833_POWER_DOMAIN_MFG3, CLK_NULL),
-	[mm] = REGBASE_V(0x14000000, mm, MT6833_POWER_DOMAIN_DISP, CLK_NULL),
-	[imgsys1] = REGBASE_V(0x15020000, imgsys1, MT6833_POWER_DOMAIN_ISP, CLK_NULL),
-	[imgsys2] = REGBASE_V(0x15820000, imgsys2, MT6833_POWER_DOMAIN_ISP2, CLK_NULL),
-	[vde2] = REGBASE_V(0x1602f000, vde2, MT6833_POWER_DOMAIN_VDEC, CLK_NULL),
-	[ven1] = REGBASE_V(0x17000000, ven1, MT6833_POWER_DOMAIN_VENC, CLK_NULL),
-	[cam_m] = REGBASE_V(0x1a000000, cam_m, MT6833_POWER_DOMAIN_CAM, CLK_NULL),
-	[cam_ra] = REGBASE_V(0x1a04f000, cam_ra, MT6833_POWER_DOMAIN_CAM_RAWA, CLK_NULL),
-	[cam_rb] = REGBASE_V(0x1a06f000, cam_rb, MT6833_POWER_DOMAIN_CAM_RAWB, CLK_NULL),
-	[ipe] = REGBASE_V(0x1b000000, ipe, MT6833_POWER_DOMAIN_IPE, CLK_NULL),
-	[mdp] = REGBASE_V(0x1f000000, mdp, MT6833_POWER_DOMAIN_DISP, CLK_NULL),
+	[mfgcfg] = REGBASE_V(0x13fbf000, mfgcfg, MT6789_POWER_DOMAIN_MFG3, CLK_NULL),
+	[mm] = REGBASE_V(0x14000000, mm, MT6789_POWER_DOMAIN_DISP, CLK_NULL),
+	[imgsys1] = REGBASE_V(0x15020000, imgsys1, MT6789_POWER_DOMAIN_ISP, CLK_NULL),
+	[vde2] = REGBASE_V(0x1602f000, vde2, MT6789_POWER_DOMAIN_VDEC, CLK_NULL),
+	[ven1] = REGBASE_V(0x17000000, ven1, MT6789_POWER_DOMAIN_VENC, CLK_NULL),
+	[cam_m] = REGBASE_V(0x1a000000, cam_m, MT6789_POWER_DOMAIN_CAM, CLK_NULL),
+	[cam_ra] = REGBASE_V(0x1a04f000, cam_ra, MT6789_POWER_DOMAIN_CAM_RAWA, CLK_NULL),
+	[cam_rb] = REGBASE_V(0x1a06f000, cam_rb, MT6789_POWER_DOMAIN_CAM_RAWB, CLK_NULL),
+	[ipe] = REGBASE_V(0x1b000000, ipe, MT6789_POWER_DOMAIN_IPE, CLK_NULL),
+	[mdp] = REGBASE_V(0x1f000000, mdp, MT6789_POWER_DOMAIN_DISP, CLK_NULL),
+	[dbgao] = REGBASE_V(0xD01A000, dbgao, PD_NULL, CLK_NULL),
 	{},
 };
 
@@ -101,8 +98,8 @@ static struct regname rn[] = {
 	/* INFRACFG_AO_BUS register */
 	REGNAME(infracfg, 0x0220, INFRA_TOPAXI_PROTECTEN),
 	REGNAME(infracfg, 0x0228, INFRA_TOPAXI_PROTECTEN_STA1),
-	REGNAME(infracfg, 0x0B80, INFRA_TOPAXI_PROTECTEN_VDNR),
-	REGNAME(infracfg, 0x0B90, INFRA_TOPAXI_PROTECTEN_VDNR_STA1),
+	REGNAME(infracfg, 0x0B80, INFRA_TOPAXI_PROTECTEN_INFRA_VDNR),
+	REGNAME(infracfg, 0x0B90, INFRA_TOPAXI_PROTECTEN_INFRA_VDNR_STA1),
 	REGNAME(infracfg, 0x0250, INFRA_TOPAXI_PROTECTEN_1),
 	REGNAME(infracfg, 0x0258, INFRA_TOPAXI_PROTECTEN_STA1_1),
 	REGNAME(infracfg, 0x0710, INFRA_TOPAXI_PROTECTEN_2),
@@ -124,7 +121,6 @@ static struct regname rn[] = {
 	REGNAME(spm, 0x310, MFG2_PWR_CON),
 	REGNAME(spm, 0x314, MFG3_PWR_CON),
 	REGNAME(spm, 0x334, ISP_PWR_CON),
-	REGNAME(spm, 0x338, ISP2_PWR_CON),
 	REGNAME(spm, 0x33C, IPE_PWR_CON),
 	REGNAME(spm, 0x340, VDE_PWR_CON),
 	REGNAME(spm, 0x348, VEN_PWR_CON),
@@ -133,8 +129,6 @@ static struct regname rn[] = {
 	REGNAME(spm, 0x35C, CAM_PWR_CON),
 	REGNAME(spm, 0x360, CAM_RAWA_PWR_CON),
 	REGNAME(spm, 0x364, CAM_RAWB_PWR_CON),
-	REGNAME(spm, 0x670, SPM_CROSS_WAKE_M01_REQ),
-	REGNAME(spm, 0x178, OTHER_PWR_STATUS),
 	/* APMIXEDSYS register */
 	REGNAME(apmixed, 0x208, ARMPLL_LL_CON0),
 	REGNAME(apmixed, 0x20c, ARMPLL_LL_CON1),
@@ -168,10 +162,10 @@ static struct regname rn[] = {
 	REGNAME(apmixed, 0x364, MMPLL_CON1),
 	REGNAME(apmixed, 0x368, MMPLL_CON2),
 	REGNAME(apmixed, 0x36c, MMPLL_CON3),
-	REGNAME(apmixed, 0x370, ADSPPLL_CON0),
-	REGNAME(apmixed, 0x374, ADSPPLL_CON1),
-	REGNAME(apmixed, 0x378, ADSPPLL_CON2),
-	REGNAME(apmixed, 0x37c, ADSPPLL_CON3),
+	REGNAME(apmixed, 0x3b4, NPUPLL_CON0),
+	REGNAME(apmixed, 0x3b8, NPUPLL_CON1),
+	REGNAME(apmixed, 0x3bc, NPUPLL_CON2),
+	REGNAME(apmixed, 0x3c0, NPUPLL_CON3),
 	REGNAME(apmixed, 0x268, MFGPLL_CON0),
 	REGNAME(apmixed, 0x26c, MFGPLL_CON1),
 	REGNAME(apmixed, 0x270, MFGPLL_CON2),
@@ -194,32 +188,21 @@ static struct regname rn[] = {
 	REGNAME(apmixed, 0x33c, APLL2_CON4),
 	REGNAME(apmixed, 0x0044, APLL2_TUNER_CON0),
 	REGNAME(apmixed, 0x000C, AP_PLL_CON3),
-	REGNAME(apmixed, 0x3b4, NPUPLL_CON0),
-	REGNAME(apmixed, 0x3b8, NPUPLL_CON1),
-	REGNAME(apmixed, 0x3bc, NPUPLL_CON2),
-	REGNAME(apmixed, 0x3c0, NPUPLL_CON3),
 	REGNAME(apmixed, 0x3c4, USBPLL_CON0),
 	REGNAME(apmixed, 0x3c8, USBPLL_CON1),
 	REGNAME(apmixed, 0x3cc, USBPLL_CON2),
 	REGNAME(apmixed, 0x14, AP_PLL_5),
-	/* INFRACFG register */
-	REGNAME(ifr, 0xB00, BUS_MON_CKEN),
+	/* DVFSRC_TOP register */
+	REGNAME(dvfsrc_top, 0x0, DVFSRC_BASIC_CONTROL),
 	/* IMP_IIC_WRAP_C register */
 	REGNAME(impc, 0xE00, AP_CLOCK_CG_CEN),
 	/* AFE register */
 	REGNAME(afe, 0x0, AUDIO_TOP_0),
 	REGNAME(afe, 0x4, AUDIO_TOP_1),
-	REGNAME(afe, 0x8, AUDIO_TOP_2),
-	/* MSDC0 register */
-	REGNAME(msdc0, 0xB4, PATCH_BIT1),
-	/* IMP_IIC_WRAP_E register */
-	REGNAME(impe, 0xE00, AP_CLOCK_CG_EST),
-	/* IMP_IIC_WRAP_S register */
-	REGNAME(imps, 0xE00, AP_CLOCK_CG_SOU),
-	/* IMP_IIC_WRAP_WS register */
-	REGNAME(impws, 0xE00, AP_CLOCK_CG_WEST_SOU),
 	/* IMP_IIC_WRAP_W register */
 	REGNAME(impw, 0xE00, AP_CLOCK_CG_WST),
+	/* IMP_IIC_WRAP_EN register */
+	REGNAME(impen, 0xE00, AP_CLOCK_CG_EST_NOR),
 	/* IMP_IIC_WRAP_N register */
 	REGNAME(impn, 0xE00, AP_CLOCK_CG_NOR),
 	/* MFG_TOP_CONFIG register */
@@ -229,10 +212,10 @@ static struct regname rn[] = {
 	REGNAME(mm, 0x1A0, MMSYS_CG_2),
 	/* IMGSYS1 register */
 	REGNAME(imgsys1, 0x0, IMG_CG),
-	/* IMGSYS2 register */
-	REGNAME(imgsys2, 0x0, IMG_CG),
 	/* VDEC_GCON_BASE register */
 	REGNAME(vde2, 0x8, LARB_CKEN_CON),
+	REGNAME(vde2, 0x200, LAT_CKEN),
+	REGNAME(vde2, 0x190, MINI_MDP_CFG_0),
 	REGNAME(vde2, 0x0, VDEC_CKEN),
 	/* VENC_GCON register */
 	REGNAME(ven1, 0x0, VENCSYS_CG),
@@ -247,10 +230,12 @@ static struct regname rn[] = {
 	/* MDPSYS_CONFIG register */
 	REGNAME(mdp, 0x100, MDPSYS_CG_0),
 	REGNAME(mdp, 0x120, MDPSYS_CG_2),
+	/* DBGAO register */
+	REGNAME(dbgao, 0x70, ATB),
 	{},
 };
 
-static const struct regname *get_all_mt6833_regnames(void)
+static const struct regname *get_all_mt6789_regnames(void)
 {
 	return rn;
 }
@@ -273,7 +258,6 @@ static void init_regbase(void)
 static u32 pwr_ofs[STA_NUM] = {
 	[PWR_STA] = 0x16C,
 	[PWR_STA2] = 0x170,
-	[OTHER_STA] = 0x178,
 };
 
 static u32 pwr_sta[STA_NUM];
@@ -303,23 +287,20 @@ static struct pvd_msk pvd_pwr_mask[] = {
 	{"camsys_main", PWR_STA, 0x00800000},
 	{"camsys_rawa", PWR_STA, 0x01000000},
 	{"camsys_rawb", PWR_STA, 0x02000000},
+	{"dbgao", PWR_STA, 0x00000000},
 	{"mmsys", PWR_STA, 0x00200000},
+	{"dvfsrc_top", PWR_STA, 0x00000000},
 	{"imgsys1", PWR_STA, 0x00002000},
-	{"imgsys2", PWR_STA, 0x00004000},
 	{"imp_iic_wrap_c", PWR_STA, 0x00000000},
-	{"imp_iic_wrap_e", PWR_STA, 0x00000000},
+	{"imp_iic_wrap_en", PWR_STA, 0x00000000},
 	{"imp_iic_wrap_n", PWR_STA, 0x00000000},
-	{"imp_iic_wrap_s", PWR_STA, 0x00000000},
 	{"imp_iic_wrap_w", PWR_STA, 0x00000000},
-	{"imp_iic_wrap_ws", PWR_STA, 0x00000000},
-	{"infracfg", PWR_STA, 0x00000000},
 	{"infracfg_ao", PWR_STA, 0x00000000},
 	{"ipesys", PWR_STA, 0x00008000},
-	{"mdpsys_config", PWR_STA, 0x00200000},
-	{"mfg", PWR_STA, 0x00000000},
-	{"msdc0sys", PWR_STA, 0x00000000},
+	{"mdpsys", PWR_STA, 0x00200000},
+	{"mfg", PWR_STA, 0x00000020},
 	{"pericfg", PWR_STA, 0x00000000},
-	{"vdec_gcon_base", PWR_STA, 0x00010000},
+	{"vdecsys", PWR_STA, 0x00010000},
 	{"vencsys", PWR_STA, 0x00040000},
 	{},
 };
@@ -347,19 +328,17 @@ static struct mtk_vf vf_table[] = {
 	MTK_VF_TABLE("scp_sel", 624000, 416000, 364000, 273000),
 	MTK_VF_TABLE("bus_aximem_sel", 364000, 273000, 273000, 218400),
 	MTK_VF_TABLE("disp_sel", 546000, 416000, 312000, 208000),
-	MTK_VF_TABLE("mdp_sel", 594000, 436800, 343750, 275000),
-	MTK_VF_TABLE("img1_sel", 624000, 458333, 343750, 275000),
-	MTK_VF_TABLE("img2_sel", 624000, 458333, 343750, 275000),
-	MTK_VF_TABLE("ipe_sel", 546000, 416000, 312000, 275000),
-	MTK_VF_TABLE("dpe_sel", 546000, 458333, 364000, 249600),
-	MTK_VF_TABLE("cam_sel", 624000, 546000, 392857, 385000),
-	MTK_VF_TABLE("ccu_sel", 499200, 392857, 364000, 275000),
+	MTK_VF_TABLE("mdp_sel", 594000, 436800, 343750, 229167),
+	MTK_VF_TABLE("img1_sel", 624000, 458333, 343750, 229167),
+	MTK_VF_TABLE("ipe_sel", 546000, 416000, 312000, 229167),
+	MTK_VF_TABLE("cam_sel", 624000, 546000, 392857, 286000),
 	MTK_VF_TABLE("mfg_ref_sel", 364000, 364000, 364000, 364000),
 	MTK_VF_TABLE("camtg_sel", 52000, 52000, 52000, 52000),
 	MTK_VF_TABLE("camtg2_sel", 52000, 52000, 52000, 52000),
 	MTK_VF_TABLE("camtg3_sel", 52000, 52000, 52000, 52000),
 	MTK_VF_TABLE("camtg4_sel", 52000, 52000, 52000, 52000),
 	MTK_VF_TABLE("camtg5_sel", 52000, 52000, 52000, 52000),
+	MTK_VF_TABLE("camtg6_sel", 52000, 52000, 52000, 52000),
 	MTK_VF_TABLE("uart_sel", 52000, 52000, 52000, 52000),
 	MTK_VF_TABLE("spi_sel", 192000, 192000, 192000, 192000),
 	MTK_VF_TABLE("msdc5hclk_sel", 273000, 273000, 273000, 273000),
@@ -373,11 +352,11 @@ static struct mtk_vf vf_table[] = {
 	MTK_VF_TABLE("scam_sel", 109200, 109200, 109200, 109200),
 	MTK_VF_TABLE("disp_pwm_sel", 130000, 130000, 130000, 130000),
 	MTK_VF_TABLE("usb_sel", 124800, 124800, 124800, 124800),
-	MTK_VF_TABLE("ssusb_xhci_sel", 124800, 124800, 124800, 124800),
 	MTK_VF_TABLE("i2c_sel", 124800, 124800, 124800, 124800),
-	MTK_VF_TABLE("seninf_sel", 499200, 499200, 392857, 385000),
-	MTK_VF_TABLE("seninf1_sel", 499200, 499200, 392857, 385000),
-	MTK_VF_TABLE("seninf2_sel", 499200, 499200, 392857, 385000),
+	MTK_VF_TABLE("seninf_sel", 499200, 499200, 392857, 286000),
+	MTK_VF_TABLE("seninf1_sel", 499200, 499200, 392857, 286000),
+	MTK_VF_TABLE("seninf2_sel", 499200, 499200, 392857, 286000),
+	MTK_VF_TABLE("seninf3_sel", 499200, 499200, 392857, 286000),
 	MTK_VF_TABLE("dxcc_sel", 273000, 273000, 273000, 273000),
 	MTK_VF_TABLE("aud_engen1_sel", 22579, 22579, 22579, 22579),
 	MTK_VF_TABLE("aud_engen2_sel", 24576, 24576, 24576, 24576),
@@ -385,7 +364,6 @@ static struct mtk_vf vf_table[] = {
 	MTK_VF_TABLE("ufs_sel", 192000, 192000, 192000, 192000),
 	MTK_VF_TABLE("aud_1_sel", 180634, 180634, 180634, 180634),
 	MTK_VF_TABLE("aud_2_sel", 196608, 196608, 196608, 196608),
-	MTK_VF_TABLE("adsp_sel", 385000, 385000, 385000, 385000),
 	MTK_VF_TABLE("dpmaif_main_sel", 364000, 364000, 364000, 273000),
 	MTK_VF_TABLE("venc_sel", 624000, 458333, 364000, 249600),
 	MTK_VF_TABLE("vdec_sel", 546000, 416000, 312000, 218400),
@@ -396,7 +374,6 @@ static struct mtk_vf vf_table[] = {
 	MTK_VF_TABLE("dvfsrc_sel", 26000, 26000, 26000, 26000),
 	MTK_VF_TABLE("aes_msdcfde_sel", 416000, 416000, 416000, 416000),
 	MTK_VF_TABLE("mcupm_sel", 182000, 182000, 182000, 182000),
-	MTK_VF_TABLE("sflash_sel", 62400, 62400, 62400, 62400),
 	MTK_VF_TABLE("dsi_occ_sel", 312000, 312000, 249600, 182000),
 	{},
 };
@@ -420,7 +397,7 @@ static int get_vcore_opp(void)
 #endif
 }
 
-void print_subsys_reg_mt6833(enum chk_sys_id id)
+void print_subsys_reg_mt6789(enum chk_sys_id id)
 {
 	struct regbase *rb_dump;
 	const struct regname *rns = &rn[0];
@@ -445,15 +422,15 @@ void print_subsys_reg_mt6833(enum chk_sys_id id)
 			rns->name, PHYSADDR(rns), clk_readl(ADDR(rns)));
 	}
 }
-EXPORT_SYMBOL(print_subsys_reg_mt6833);
+EXPORT_SYMBOL(print_subsys_reg_mt6789);
 
 #if IS_ENABLED(CONFIG_MTK_DEVAPC)
 static void devapc_dump(void)
 {
-	print_subsys_reg_mt6833(spm);
-	print_subsys_reg_mt6833(top);
-	print_subsys_reg_mt6833(infracfg);
-	print_subsys_reg_mt6833(apmixed);
+	print_subsys_reg_mt6789(spm);
+	print_subsys_reg_mt6789(top);
+	print_subsys_reg_mt6789(infracfg);
+	print_subsys_reg_mt6789(apmixed);
 }
 
 static struct devapc_vio_callbacks devapc_vio_handle = {
@@ -467,18 +444,16 @@ static const char * const off_pll_names[] = {
 	"univpll",
 	"msdcpll",
 	"mmpll",
-	"adsppll",
+	"npupll",
 	"mfgpll",
 	"tvdpll",
-	"apll1",
-	"apll2",
-	"npupll",
 	"usbpll",
 	NULL
 };
 
 static const char * const notice_pll_names[] = {
-
+	"apll1",
+	"apll2",
 	NULL
 };
 
@@ -504,8 +479,8 @@ static bool is_pll_chk_bug_on(void)
  * init functions
  */
 
-static struct clkchk_ops clkchk_mt6833_ops = {
-	.get_all_regnames = get_all_mt6833_regnames,
+static struct clkchk_ops clkchk_mt6789_ops = {
+	.get_all_regnames = get_all_mt6789_regnames,
 	.get_spm_pwr_status_array = get_spm_pwr_status_array,
 	.get_pvd_pwr_mask = get_pvd_pwr_mask,
 	.get_off_pll_names = get_off_pll_names,
@@ -516,13 +491,13 @@ static struct clkchk_ops clkchk_mt6833_ops = {
 	.devapc_dump = devapc_dump,
 };
 
-static int clk_chk_mt6833_probe(struct platform_device *pdev)
+static int clk_chk_mt6789_probe(struct platform_device *pdev)
 {
 	init_regbase();
 
 	set_clkchk_notify();
 
-	set_clkchk_ops(&clkchk_mt6833_ops);
+	set_clkchk_ops(&clkchk_mt6789_ops);
 
 #if IS_ENABLED(CONFIG_MTK_DEVAPC)
 	register_devapc_vio_callback(&devapc_vio_handle);
@@ -531,12 +506,21 @@ static int clk_chk_mt6833_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static struct platform_driver clk_chk_mt6833_drv = {
-	.probe = clk_chk_mt6833_probe,
+static const struct of_device_id of_match_clkchk_mt6789[] = {
+	{
+		.compatible = "mediatek,mt6789-clkchk",
+	}, {
+		/* sentinel */
+	}
+};
+
+static struct platform_driver clk_chk_mt6789_drv = {
+	.probe = clk_chk_mt6789_probe,
 	.driver = {
-		.name = "clk-chk-mt6833",
+		.name = "clk-chk-mt6789",
 		.owner = THIS_MODULE,
 		.pm = &clk_chk_dev_pm_ops,
+		.of_match_table = of_match_clkchk_mt6789,
 	},
 };
 
@@ -544,22 +528,16 @@ static struct platform_driver clk_chk_mt6833_drv = {
  * init functions
  */
 
-static int __init clkchk_mt6833_init(void)
+static int __init clkchk_mt6789_init(void)
 {
-	static struct platform_device *clk_chk_dev;
-
-	clk_chk_dev = platform_device_register_simple("clk-chk-mt6833", -1, NULL, 0);
-	if (IS_ERR(clk_chk_dev))
-		pr_warn("unable to register clk-chk device");
-
-	return platform_driver_register(&clk_chk_mt6833_drv);
+	return platform_driver_register(&clk_chk_mt6789_drv);
 }
 
-static void __exit clkchk_mt6833_exit(void)
+static void __exit clkchk_mt6789_exit(void)
 {
-	platform_driver_unregister(&clk_chk_mt6833_drv);
+	platform_driver_unregister(&clk_chk_mt6789_drv);
 }
 
-subsys_initcall(clkchk_mt6833_init);
-module_exit(clkchk_mt6833_exit);
+subsys_initcall(clkchk_mt6789_init);
+module_exit(clkchk_mt6789_exit);
 MODULE_LICENSE("GPL");
